@@ -1,0 +1,12 @@
+FROM gcc:latest
+
+WORKDIR /app
+
+COPY encoder.cpp .
+COPY crow_all.h .
+COPY asio.hpp .
+COPY asio ./asio
+
+RUN g++ -std=c++17 -I. encoder.cpp -lpthread -o encoder_server
+EXPOSE 18080
+CMD ["./encoder_server"]
