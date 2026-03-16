@@ -22,3 +22,42 @@ In stress tests, this system handled **800+ requests per second** for redirects 
 Ensure you have Docker installed, then run:
 ```bash
 docker compose up --build
+
+
+The dashboard will be live at http://localhost:8000
+
+ARCHITCTURE OF THE SYSTEM FOR KNWOLEDGE PURPOSE ONLY
+graph TD
+    %% User Layer
+    User(( End User)) -->|Paste URL| Frontend[Tailwind Dashboard]
+    User -->|Click Link| Frontend
+
+    %% API Layer (The Manager)
+    subgraph FastAPI_Container [Python Microservice]
+        Frontend -->|POST /shorten| API[ FastAPI Manager]
+        Frontend -->|GET /stats| API
+        API -->|Check Cache| Redis
+    end
+
+    %% Logic Layer (The Brain)
+    subgraph CPP_Container [C++ Microservice]
+        API -->|HTTP Request| Crow[ Crow Encoder]
+        Crow -->|Base62 Logic| ID[Unique ID to Short Code]
+    end
+
+    %% Storage Layer (Persistence)
+    subgraph Data_Layer [Storage Cluster]
+        API -->|Save Link| Postgres[( PostgreSQL)]
+        API -->|Cache Link & Incr Clicks| Redis[( Redis RAM)]
+    end
+
+    %% Flow of Redirect
+    User -->|Short Link| API
+    API -->|1. Check Redis| Redis
+    Redis -- Cache Hit --> API
+    API -- Redirect --> User
+    
+    style User fill:#f9f,stroke:#333,stroke-width:2px
+    style CPP_Container fill:#d1e7dd,stroke:#0f5132
+    style FastAPI_Container fill:#fff3cd,stroke:#856404
+    style Data_Layer fill:#cfe2ff,stroke:#084298
